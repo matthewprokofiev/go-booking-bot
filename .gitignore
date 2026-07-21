@@ -1,0 +1,16 @@
+.env
+*.env
+!.env.example
+
+bot
+/bin/
+/out/
+
+*.exe
+*.test
+*.out
+coverage.*
+
+.DS_Store
+.idea/
+.vscode/

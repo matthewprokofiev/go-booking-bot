@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: go vet
+        run: go vet ./...
+
+      # Версия совпадает с GOLANGCI_LINT_VERSION в Makefile: локальный make lint
+      # и CI должны линтить одинаково.
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: go test
+        run: go test -race ./...
+
+      # Интеграционные тесты на testcontainers: на ubuntu-latest Docker уже есть.
+      - name: integration tests
+        run: go test -tags=integration -count=1 -timeout 600s ./...
+
+      - name: docker build
+        run: docker build -t go-booking-bot:ci .
